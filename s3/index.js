@@ -1,13 +1,24 @@
-import { PutObjectCommand, S3 } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
 import { error } from "console";
 import { configDotenv } from "dotenv";
 import express from "express";
 import cors from "cors";
 import formidable from "formidable";
 import fs, { read } from "fs";
+import {
+  S3RequestPresigner,
+  getSignedUrl,
+} from "@aws-sdk/s3-request-presigner";
 configDotenv();
 
 const s3client = new S3({
+  region: "ap-south-1",
+  credentials: {
+    accessKeyId: process.env.aws_access_key_id,
+    secretAccessKey: process.env.aws_secret_access_key,
+  },
+});
+const signer = new S3RequestPresigner({
   region: "ap-south-1",
   credentials: {
     accessKeyId: process.env.aws_access_key_id,
@@ -67,26 +78,24 @@ app.post("/", async (req, res, next) => {
       });
   });
 });
-app.get("/get", (req, res) => {
-  s3client.getObject({ Bucket: "onelinks", Key: "logo.png" }, (err, data) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send("unsucessful fetch");
-    } else {
-      const readstream = data.Body
-      console.log(readstream)
-      res.status(200).send(readstream);
-    }
-  });
+app.get("/get", async (req, res) => {
+ 
+  const commd = new GetObjectCommand({ Bucket: "onelinks", Key: "logo.png" });
+
+  const z = await getSignedUrl(s3client, commd, { expiresIn: 3 });
+  res.status(200).send(z);
 });
-app.delete('/del',(req,res)=>{
-  s3client.deleteObject({Bucket:'onelinks',Key:'logo.png'},(err,data)=>{
-    if(err){
-      res.status(500).send('error erasing the fuile')
-        }
-        res.status(200).send(data)
-  })
-})
+app.delete("/del", (req, res) => {
+  s3client.deleteObject(
+    { Bucket: "onelinks", Key: "logo.png" },
+    (err, data) => {
+      if (err) {
+        res.status(500).send("error erasing the fuile");
+      }
+      res.status(200).send(data);
+    }
+  );
+});
 app.listen(4000, () => {
   console.log("helllow 4000");
 });
