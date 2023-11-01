@@ -38,7 +38,7 @@ const date = new Date();
 const today = `${date.getDay()}:${date.getMonth()}:${date.getFullYear()}`;
 app.post("/", async (req, res, next) => {
   const form = formidable({
-    uploadDir: "C:/Users/Suyash/programming/aws-trials/uploads",
+    // uploadDir: "C:/Users/Suyash/programming/aws-trials/uploads",
     maxFileSize: 50 * 1024 * 1024,
     multiples: true,
   });
@@ -46,7 +46,7 @@ app.post("/", async (req, res, next) => {
   form.parse(req);
 
   form.on("file", async (forms, file) => {
-    // console.log(file.filepath);
+    console.log(file.filepath);
 
     const readStream = fs.createReadStream(file.filepath);
 
@@ -64,8 +64,8 @@ app.post("/", async (req, res, next) => {
             res.status(500);
           }
 
-          const ur = `https://${process.env.bucket}.s3.ap-south-1.amazonaws.com/${file.originalFilename}`;
-          console.log(ur);
+          // const ur = `https://${process.env.bucket}.s3.ap-south-1.amazonaws.com/${file.originalFilename}`;
+          // console.log(ur);
           res.status(200).send("upload sucessful");
         }
       )
